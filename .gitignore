@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# Data
+# FER Plus Dataset (35k+ images)
+fer2013plus/
