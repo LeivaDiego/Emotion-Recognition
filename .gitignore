@@ -176,4 +176,10 @@ cython_debug/
 
 # Data
 # FER Plus Dataset (35k+ images)
+fer2013plus/# Refer to the README for instructions on how to download the dataset.
+# This is a large dataset and should not be included in the repository.
 fer2013plus/
+# Models
+# MediaPipe models are large and should not be included in the repository.
+# Refer to the README for instructions on how to download the models.
+mediapipe/
