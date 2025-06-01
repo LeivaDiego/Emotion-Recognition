@@ -26,19 +26,21 @@ class LandmarkDetectorMP:
     # MediaPipe options and model initialization
     def __init__(self, mode="IMAGE", 
                  model_path="models/mediapipe/face_landmarker.task",
-                 enable_logging=False):
+                 resizing=True,
+                 verbose=False):
         """
         Initializes the MediaPipe FaceLandmarker model with specified options.
         Args:
             mode (str): The running mode for the FaceLandmarker. Options are 'IMAGE', 'VIDEO', or 'LIVE_STREAM'.
             model_path (str): Path to the MediaPipe FaceLandmarker model file.
-            enable_logging (bool): Flag to enable or disable logging.
+            resizing (bool): Flag to enable or disable resizing of the input image.
+            verbose (bool): Flag to enable verbose logging.
 
         Raises:
             ValueError: If the model path is invalid or if the mode is not supported.
             AttributeError: If the MediaPipe tasks module is not properly initialized.
         """
-        if enable_logging:
+        if verbose:
             # Enable logging
             logger.setLevel(logging.DEBUG)
         else:
@@ -51,6 +53,9 @@ class LandmarkDetectorMP:
         self.FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
         self.VisionRunningMode = mp.tasks.vision.RunningMode
         mode = mode.upper() # Ensure mode is uppercase
+
+        # Resizing option
+        self.enable_resizing = resizing
 
         # Initialize MediaPipe FaceLandmarker
         # Validate model path
@@ -106,6 +111,13 @@ class LandmarkDetectorMP:
         """
         # Convert BGR to RGB for MediaPipe processing
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Resize the image if resizing is enabled
+        if self.enable_resizing:
+            logger.debug("Resizing the cropped face to a fixed size (128x128 pixels).")
+            # Resize the cropped face to a fixed size
+            rgb_image = cv2.resize(rgb_image, (128, 128), interpolation=cv2.INTER_LINEAR)
+
         # Convert to MediaPipe Image format
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
 
@@ -136,7 +148,7 @@ class LandmarkDetectorMP:
         if not result.face_landmarks:
             logger.warning("No face landmarks detected.")
             return None
-        logger.debug(f"Detected {len(result.face_landmarks)} face landmarks.")
+        logger.debug(f"Detected {len(result.face_landmarks)} face with landmarks.")
 
         # Return the landmarks
         return result
@@ -155,7 +167,7 @@ class LandmarkDetectorMP:
         if not result or not result.face_landmarks:
             logger.warning("No face landmarks found in the result.")
             return None
-        
+        logger.debug("Extracting 3D landmarks from the first detected face.")
         # Extract the first detected face landmarks
         landmarks = result.face_landmarks[0]
         # Flatten the landmarks into a 1D vector
@@ -164,7 +176,7 @@ class LandmarkDetectorMP:
 
         # Convert the list to a numpy array of type float32
         vector_1d = np.array(vector, dtype=np.float32)
-
+        logger.debug(f"Extracted landmark vector of shape: {vector_1d.shape}")
         # Return the flattened vector
         return vector_1d
 
@@ -181,6 +193,7 @@ class LandmarkDetectorMP:
         Returns:
             numpy.ndarray: The annotated image with landmarks drawn.
         """
+        logger.debug("Annotating face landmarks on the image...")
         # Check if landmarks are provided
         face_landmarks_list = landmarks.face_landmarks
         annotated_image = np.copy(image)
@@ -194,7 +207,7 @@ class LandmarkDetectorMP:
             face_landmarks_proto.landmark.extend([
             landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in face_landmarks
             ])
-
+            logger.debug(f"Drawing landmarks for face {idx + 1} with {len(face_landmarks_proto.landmark)} landmarks.")
             # Draw the face mesh tesselation, contours, and irises.
             solutions.drawing_utils.draw_landmarks(
                 image=annotated_image,
@@ -203,7 +216,7 @@ class LandmarkDetectorMP:
                 landmark_drawing_spec=None,
                 connection_drawing_spec=mp.solutions.drawing_styles
                 .get_default_face_mesh_tesselation_style())
-            
+            logger.debug(f"Drawing face mesh tesselation for face {idx + 1}.")
             # Draw the face mesh contours.
             solutions.drawing_utils.draw_landmarks(
                 image=annotated_image,
@@ -212,7 +225,7 @@ class LandmarkDetectorMP:
                 landmark_drawing_spec=None,
                 connection_drawing_spec=mp.solutions.drawing_styles
                 .get_default_face_mesh_contours_style())
-            
+            logger.debug(f"Drawing face mesh contours for face {idx + 1}.")
             # Draw the face mesh irises.
             solutions.drawing_utils.draw_landmarks(
                 image=annotated_image,
@@ -222,5 +235,6 @@ class LandmarkDetectorMP:
                 connection_drawing_spec=mp.solutions.drawing_styles
                 .get_default_face_mesh_iris_connections_style())
         
+        logger.debug("Face landmarks annotation completed successfully.")
         # Return the annotated image with landmarks drawn
         return annotated_image

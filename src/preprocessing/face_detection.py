@@ -25,22 +25,20 @@ class FaceDetectorMP:
     # MediaPipe options and model initialization
     def __init__(self, mode="IMAGE", 
                  model_path="models/mediapipe/blaze_face_short_range.tflite",
-                 enable_resizing=True,
-                 enable_logging=False):
+                 verbose=False):
         """
         Initializes the MediaPipe FaceDetector with specified options.
         
         Args:
             mode (str): Running mode for the face detector. Default is "IMAGE".
             model_path (str): Path to the MediaPipe model file.
-            enable_resizing (bool): If True, enables resizing of the input image.
-            enable_logging (bool): If True, enables logging for MediaPipe tasks.
+            verbose (bool): If True, enables detailed logging. Default is False.
 
         Raises:
             ValueError: If the model path is invalid or if the mode is not recognized.
             AttributeError: If the mode is not a valid MediaPipe RunningMode.
         """
-        if enable_logging:
+        if verbose:
             # Enable Logging
             logger.setLevel(logging.DEBUG)
         else:
@@ -55,9 +53,6 @@ class FaceDetectorMP:
         mode = mode.upper()  # Convert mode to uppercase for consistency
         # Attribute to store the running mode
         self.running_mode = None
-
-        # Resizing option
-        self.enable_resizing = enable_resizing
 
         # Initialize MediaPipe FaceDetector
         # Validate the model path
@@ -177,11 +172,7 @@ class FaceDetectorMP:
         if cropped_face.size == 0:
             logger.warning("Cropped face is empty. No valid face detected.")
             return None
-        
-        if self.enable_resizing:
-            logger.debug("Resizing the cropped face to a fixed size (48x48 pixels).")
-            # Resize the cropped face to a fixed size (e.g., 48x48 pixels)
-            cropped_face = cv2.resize(cropped_face, (48, 48), interpolation=cv2.INTER_LINEAR)
+        logger.debug("Face cropped successfully.")
         # Return the cropped face image
         return cropped_face
 
@@ -241,7 +232,7 @@ class FaceDetectorMP:
         annotated_image = image.copy()
         # Extract image dimensions
         height, width, _ = image.shape
-
+        logger.debug("Annotating face detections on the image...")
         # Iterate through each detection in the result
         for detection in detection_result.detections:
             # Get the bounding box coordinates
@@ -257,7 +248,7 @@ class FaceDetectorMP:
                 keypoint_px = self.normalize_to_pixel_coordinates(keypoint.x, keypoint.y, width, height)
                 # Draw the keypoint circle on the image
                 cv2.circle(annotated_image, keypoint_px, thickness, color, radius)
-
+        
         # Draw label and score
         category = detection.categories[0]
         category_name = category.category_name
@@ -265,5 +256,8 @@ class FaceDetectorMP:
         result_text = category_name
         text_location = (margin + bbox.origin_x, margin + row_size + bbox.origin_y)
         cv2.putText(annotated_image, result_text, text_location, cv2.FONT_HERSHEY_PLAIN, font_size, text_color, font_thickness)
-
+        
+        logger.debug("Face detections annotated successfully.")
+        
+        # Return the annotated image with bounding boxes and keypoints
         return annotated_image
