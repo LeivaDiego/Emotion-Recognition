@@ -1,3 +1,6 @@
+# --- Logger Utility Module ---
+# Description: This module provides a utility function to create and configure a logger.
+
 import logging
 
 def get_logger(name: str = __name__, level: int = logging.INFO) -> logging.Logger:

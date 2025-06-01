@@ -43,7 +43,7 @@ class FaceDetectorMP:
             logger.setLevel(logging.DEBUG)
         else:
             # Disable Logging
-            logger.setLevel(logging.INFO)
+            logger.setLevel(logging.ERROR)
 
         # MediaPipe options setup
         self.BaseOptions = mp.tasks.BaseOptions

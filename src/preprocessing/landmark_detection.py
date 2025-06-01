@@ -45,7 +45,7 @@ class LandmarkDetectorMP:
             logger.setLevel(logging.DEBUG)
         else:
             # Disable logging
-            logger.setLevel(logging.INFO)
+            logger.setLevel(logging.ERROR)
 
         # MediaPipe Options setup
         self.BaseOptions = mp.tasks.BaseOptions
