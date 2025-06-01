@@ -25,6 +25,7 @@ class FaceDetectorMP:
     # MediaPipe options and model initialization
     def __init__(self, mode="IMAGE", 
                  model_path="models/mediapipe/blaze_face_short_range.tflite",
+                 enable_resizing=True,
                  enable_logging=False):
         """
         Initializes the MediaPipe FaceDetector with specified options.
@@ -32,6 +33,7 @@ class FaceDetectorMP:
         Args:
             mode (str): Running mode for the face detector. Default is "IMAGE".
             model_path (str): Path to the MediaPipe model file.
+            enable_resizing (bool): If True, enables resizing of the input image.
             enable_logging (bool): If True, enables logging for MediaPipe tasks.
 
         Raises:
@@ -53,6 +55,9 @@ class FaceDetectorMP:
         mode = mode.upper()  # Convert mode to uppercase for consistency
         # Attribute to store the running mode
         self.running_mode = None
+
+        # Resizing option
+        self.enable_resizing = enable_resizing
 
         # Initialize MediaPipe FaceDetector
         # Validate the model path
@@ -172,8 +177,11 @@ class FaceDetectorMP:
         if cropped_face.size == 0:
             logger.warning("Cropped face is empty. No valid face detected.")
             return None
-        # Resize the cropped face to a fixed size (e.g., 48x48 pixels)
-        cropped_face = cv2.resize(cropped_face, (48, 48), interpolation=cv2.INTER_LINEAR)
+        
+        if self.enable_resizing:
+            logger.debug("Resizing the cropped face to a fixed size (48x48 pixels).")
+            # Resize the cropped face to a fixed size (e.g., 48x48 pixels)
+            cropped_face = cv2.resize(cropped_face, (48, 48), interpolation=cv2.INTER_LINEAR)
         # Return the cropped face image
         return cropped_face
 
