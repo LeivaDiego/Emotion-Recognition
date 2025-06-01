@@ -60,9 +60,11 @@ class FaceDetectorMP:
             logger.error("Invalid model path provided. Please provide a valid path to the model file.")
             raise ValueError("Invalid model path.")
         
+        # Validate the mode
+        # Check if the mode is a valid MediaPipe RunningMode
         if mode not in self.VisionRunningMode.__members__:
             logger.error(f"Invalid mode '{mode}'. Available modes: {', '.join(self.VisionRunningMode.__members__)}")
-            raise ValueError(f"Invalid mode '{mode}'.")
+            raise AttributeError(f"Invalid mode '{mode}'.")
         
         else:
             logger.info(f"Initializing MediaPipe FaceDetector with model: {model_path}")
@@ -77,14 +79,15 @@ class FaceDetectorMP:
             
         # Setup the options for the FaceDetector
         options = self.FaceDetectorOptions(
-            base_options=self.BaseOptions(model_asset_path=model_path),  # Path to the model
-            running_mode=self.running_mode,                                   # Running mode for image processing
+            base_options=self.BaseOptions(model_asset_path=model_path), # Path to the model
+            running_mode=self.running_mode,                             # Running mode for image processing
             min_detection_confidence=0.5,                               # Minimum confidence for detection to be considered valid
             min_suppression_threshold=0.3,                              # Threshold for suppressing overlapping detections
         )
 
         # Create the FaceDetector with the specified options
         self.face_detector = self.FaceDetector.create_from_options(options)
+        logger.info("MediaPipe FaceDetector initialized successfully.")
 
 
     def detect_faces(self, image, timestamp=None):
@@ -112,7 +115,7 @@ class FaceDetectorMP:
             # Create a MediaPipe Timestamp object
             mp_timestamp = mp.Timestamp(seconds=timestamp)
             # Detect faces from the video frame
-            result = self.face_detector.detect_from_video(mp_image, mp_timestamp)
+            result = self.face_detector.detect_for_video(mp_image, mp_timestamp)
 
         # Check if running mode is IMAGE
         # This does not require a timestamp
@@ -126,6 +129,7 @@ class FaceDetectorMP:
         
         # Check if any faces were detected
         if not result.detections:
+            logger.warning("No faces detected in the image.")
             return None
         logger.debug(f"Detected {len(result.detections)} face(s) in the image.")
 
@@ -204,7 +208,7 @@ class FaceDetectorMP:
 
 
 
-    def visualize_detections(self, image, detection_result):
+    def annotate_face_detections(self, image, detection_result):
         """
         Draws bounding boxes and keypoints on the image for detected faces.
 
