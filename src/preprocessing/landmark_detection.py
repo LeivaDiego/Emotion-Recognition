@@ -129,10 +129,8 @@ class LandmarkDetectorMP:
             if timestamp is None:
                 logger.error("Timestamp must be provided for VIDEO mode.")
                 raise AttributeError("Timestamp not provided for VIDEO mode.")
-            # Create a MediaPipe Timestamp object
-            mp_timestamp = mp.Timestamp(seconds=timestamp)
             # Detect faces from the video frame
-            result = self.face_landmarker.detect_for_video(mp_image, mp_timestamp)
+            result = self.face_landmarker.detect_for_video(mp_image, timestamp)
 
         # Check if running mode is IMAGE
         # This does not require a timestamp
